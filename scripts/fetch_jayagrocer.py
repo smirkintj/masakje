@@ -29,8 +29,11 @@ UA = {"User-Agent": "MasakJe-personal/0.1 (weekly price check; personal meal pla
 COLLECTIONS = ["fresh-market", "poultry", "chicken", "meat", "beef", "lamb", "fish", "hs-seafood", "seafood",
                "prawns-and-crabs", "eggs", "cooking-ingredients", "dressings-sauces", "sauces-and-specialty",
                "herbs-and-spices", "blended-and-cooking-oil", "cooking-noodles", "tofu-noodles-and-others",
-               "rice-and-grains", "white-rice", "dried-meat-and-seafood-1", "chilled-produce", "coconut-milk"]
+               "rice-and-grains", "white-rice", "dried-meat-and-seafood-1", "chilled-produce", "coconut-milk",
+               "dairy-produce", "milk", "pasta", "noodles-and-pasta", "honey"]
 PAUSE = 2.0
+# Never price from non-halal products, whatever an ingredient rule matches (Jaya Grocer marks them "[NON-HALAL]")
+NON_HALAL = re.compile(r"non[- ]?halal|\bpork\b|\bbabi\b|\bbacon\b|\blard\b|\bham\b", re.I)
 OUT = os.path.join(ROOT, "public", "data", "prices", "jayagrocer.json")
 MAP = os.path.join(ROOT, "src", "data", "jayagrocer_map.json")
 INGREDIENTS = os.path.join(ROOT, "src", "data", "ingredients.json")
@@ -108,7 +111,7 @@ def main():
         inc, exc = re.compile(rule["match"], re.I), re.compile(rule.get("exclude", r"^\b$"), re.I)
         cands = []
         for p in products:
-            if not inc.search(p["title"]) or exc.search(p["title"]):
+            if not inc.search(p["title"]) or exc.search(p["title"]) or NON_HALAL.search(p["title"]):
                 continue
             for v in p["variants"]:
                 if not v["available"] or v["price"] <= 0:

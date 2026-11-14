@@ -338,16 +338,16 @@
    "exclude": "sauce|ready|instant|whole ?wheat|gluten"
   },
   "sohun": {
-   "match": "glass noodle|sohun|tang hoon|vermicelli.*(mung|bean)",
-   "exclude": "soup|cup|instant"
+   "match": "glass noodle|green bean vermicelli|tang ?hoon|sohun|soohoon",
+   "exclude": "soup|cup|instant|pine|red"
   },
   "butter": {
-   "match": "\\b(salted|unsalted|pure|dairy) butter\\b|\\bbutter (block|250|227|200)",
-   "exclude": "peanut|cookie|biscuit|cake|garlic|spread|margarine|lettuce|head|bean|bread|popcorn|croissant|ghee|fish|squash"
+   "match": "\\bbutter\\b",
+   "exclude": "peanut|cookie|biscuit|cake|garlic|spread|margarine|lettuce|head|bean|bread|popcorn|croissant|ghee|fish|squash|milk|cream|chocolate|kaya|almond|cashew|caramel|scotch|toffee|cracker|oil|flavou?r|blend"
   },
   "cheese": {
-   "match": "cheddar",
-   "exclude": "cracker|biscuit|snack|bread|sauce|cake|stick"
+   "match": "cheddar|mozzarella|cheese slices?|grated cheese|shredded cheese",
+   "exclude": "cracker|biscuit|snack|bread|sauce|cake|stick|cream cheese|snack|crisps|puff|ball|ring|cracker|spread|dip|powder|pizza|burger|sausage"
   },
   "milk": {
    "match": "fresh milk|full cream milk|pasteuri[sz]ed milk",
@@ -370,8 +370,8 @@
    "exclude": "sauce mix|ramyun|noodle"
   },
   "honey": {
-   "match": "\\b(pure|natural|raw|wild|forest|manuka|acacia|organic|bee) honey\\b|^honey \\d",
-   "exclude": "lemon|chicken|cereal|biscuit|cake|drink|tea|mustard|pollen|comb|stick|mandarin|orange|melon|potato|dates|lime|pear|apple|pomelo|sauce|glazed"
+   "match": "(pure|natural|raw|flower|acacia|manuka|meadow|blossom|gum|longan|yemen|australian|squeeze|golden|organic) honey\\b",
+   "exclude": "drops|tea|sauce|mustard|yogurt|cereal|chil+i|pesto|bbq|barbe?que|ham|cashew|almond|lozenge|drink|comb|jalapeno|vinegar|frank|potato|sweet|mikan|tangerine|jackfruit|tomato|salad|melon"
   },
   "vinegar": {
    "match": "vinegar|cuka",
