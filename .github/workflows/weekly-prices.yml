@@ -1,6 +1,7 @@
 name: Weekly prices
 
-# Refreshes KPDN PriceCatcher prices and Jaya Grocer online prices (personal use),
+# Refreshes KPDN PriceCatcher prices, Jaya Grocer online prices (personal use) and the Econsave
+# weekly catalogue's promo prices,
 # rebuilds the prototype bundle, and commits the result.
 on:
   schedule:
@@ -13,6 +14,8 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    env:
+      HAS_DEEPSEEK: ${{ secrets.DEEPSEEK_API_KEY != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -22,6 +25,16 @@ jobs:
         run: python3 scripts/build_prices.py
       - name: Jaya Grocer online prices (personal use, polite, once a week)
         run: python3 scripts/fetch_jayagrocer.py
+      - name: Econsave weekly catalogue, West Malaysia (read by DeepSeek vision)
+        # Skipped until the DEEPSEEK_API_KEY repository secret exists; a failure here never blocks the other prices
+        if: ${{ env.HAS_DEEPSEEK == 'true' }}
+        continue-on-error: true
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          pip install -q pypdf
+          python3 scripts/fetch_econsave.py
       - name: Shops and opening hours (OpenStreetMap, ODbL)
         run: pip install osmium && python3 scripts/build_osm_shops.py
       - name: Rebuild prototype
@@ -30,6 +43,6 @@ jobs:
         run: |
           git config user.name "masakje-bot"
           git config user.email "masakje-bot@users.noreply.github.com"
-          git add public/data prototype/index.html
+          git add public/data public/index.html prototype/index.html api/_catalog.js
           git diff --cached --quiet || git commit -m "Weekly price refresh $(date -u +%F)"
           git push

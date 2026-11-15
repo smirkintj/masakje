@@ -52,6 +52,8 @@ python3 scripts/build_prototype.py
 
 ## Weekly refresh
 
+- Econsave weekly catalogue (West Malaysia): `scripts/fetch_econsave.py` finds the flipbook PDF, renders each page, reads names and prices with DeepSeek vision, matches them to ingredients and drops anything below 30% or above 300% of the PriceCatcher median. Promo prices are used only between the catalogue's valid-from and valid-to dates: as the price when your shop is an Econsave (if cheaper than its regular price), otherwise as a hint on the shopping list when at least 10% cheaper. Needs the `DEEPSEEK_API_KEY` repository secret.
+
 `.github/workflows/weekly-prices.yml` runs every Monday 03:17 MYT: PriceCatcher → Jaya Grocer → rebuild → commit.
 
 ## Known limits

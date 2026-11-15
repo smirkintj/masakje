@@ -447,6 +447,7 @@ h1 { font-size: 30px; line-height: 1.15; font-weight: 500; margin: 12px 0 4px; t
 .iart { width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); display: grid; place-items: center; flex: none; }
 .iart svg { width: 34px; }
 .item.wa { grid-template-columns: 28px 40px minmax(0, 1fr) auto; }
+.q.econ { color: var(--accent); }
 .item.kit { gap: 10px; padding-left: 12px; padding-right: 8px; }
 .item.kit .iart { width: 32px; height: 32px; border-radius: 10px; }
 .item.kit .iart svg { width: 27px; }
@@ -675,17 +676,23 @@ const DATA = /*__DATA__*/null;
       else if (PR.national[ki] > 0) { per = PR.national[ki]; src = "Malaysia"; }
     }
     if (per == null && isJG() && JG.items[key]) { per = JG.items[key].per; src = "Jaya Grocer"; }
+    if (econLive() && econShop() && ECON.items[key] && (per == null || ECON.items[key].per < per)) { per = ECON.items[key].per; src = "Econsave promo"; }
     if (per == null) per = it.fallback;
     return { unit: per / it.size, src };
   }
-  function unitPrice(key) {
-    const it = ING[key], p = price(key), per = p.unit * it.size;
-    let u;
-    if (it.unit === "pc") u = it.size === 1 ? "each" : `${it.size} ${key === "egg" ? "eggs" : "pcs"}`;
-    else if (it.size === 1000) u = it.unit === "g" ? "kg" : "L";
-    else u = `${it.size} ${it.unit}`;
-    return `${rm(per)}/${u}`;
+  function unitSuffix(key) {
+    const it = ING[key];
+    if (it.unit === "pc") return it.size === 1 ? "each" : `${it.size} ${key === "egg" ? "eggs" : "pcs"}`;
+    if (it.size === 1000) return it.unit === "g" ? "kg" : "L";
+    return `${it.size} ${it.unit}`;
   }
+  function unitPrice(key) { const p = price(key); return `${rm(p.unit * ING[key].size)}/${unitSuffix(key)}`; }
+  // ---------- Econsave weekly catalogue: promo prices, only between its valid-from and valid-to dates ----------
+  const ECON = PR.econ || null;
+  const myToday = () => new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);   // Malaysia date
+  const econLive = () => !!(ECON && ECON.valid_from && ECON.valid_to && ECON.items && myToday() >= ECON.valid_from && myToday() <= ECON.valid_to);
+  const econShop = () => { const c = chosenShop(); return !!(c && /econ ?save/i.test(c.name)); };
+  const econTill = () => { const [y, m, d] = ECON.valid_to.split("-").map(Number); return fmtDate(new Date(y, m - 1, d)); };
   function priceLabel() {
     if (S.settings.shop >= 0) return shopName(PR.shops[S.settings.shop]);
     if (S.settings.shop === -2 && S.settings.custom) return S.settings.custom.name;
@@ -1067,11 +1074,14 @@ const DATA = /*__DATA__*/null;
     const covered = fresh.filter(r => !r.buy);
     for (const r of [...fresh.filter(r => r.buy), ...needP]) (groups[r.it.aisle] = groups[r.it.aisle] || []).push(r);
     const order = ["Vegetables", "Onion, garlic & chili", "Meat & poultry", "Fish & seafood", "Eggs & tofu", "Dairy", "Noodles", "Dry goods", "Pantry", "Spices"];
-    const srcTag = s => `<span class="tag ${s === "This shop" || s === "Jaya Grocer" ? "ok" : ""}">${s}</span>`;
+    const srcTag = s => `<span class="tag ${s === "This shop" || s === "Jaya Grocer" || s === "Econsave promo" ? "ok" : ""}">${s === "Econsave promo" ? `Econsave promo till ${econTill()}` : s}</span>`;
+    // elsewhere: a quiet hint when Econsave has it noticeably cheaper this week
+    const econHint = r => { if (!econLive() || econShop() || !ECON.items[r.k]) return ""; const e = ECON.items[r.k], now = price(r.k).unit * ING[r.k].size;
+      return e.per < now * 0.9 ? `<div class="q econ">${rm(e.per)}/${unitSuffix(r.k)} at Econsave this week, till ${econTill()}</div>` : ""; };
     const jgLine = r => r.src === "Jaya Grocer" ? `<div class="q"><a href="${esc(JG.items[r.k].url)}" target="_blank" rel="noopener" style="color:var(--fg2)">${esc(JG.items[r.k].title)} · RM ${JG.items[r.k].price.toFixed(2)}</a></div>` : "";
     const row = r => {
       const done = !!S.bought[r.k];
-      return `<label class="item wa ${done ? "done" : ""}"><input type="checkbox" id="b-${r.k}" data-bought="${r.k}" ${done ? "checked" : ""}>${ingArt(r.k, all.indexOf(r))}<div><div class="n">${esc(r.it.name)}</div><div class="q"><b style="font-weight:600;color:var(--fg2)">${r.src === "Jaya Grocer" ? `${r.packs} × ${r.it.unit === "pc" && JG.items[r.k].size % 1 ? "pack" : qty(JG.items[r.k].size, r.it.unit, r.k)}` : qty(r.buy, r.it.unit, r.k)}</b><span>· ${unitPrice(r.k)}</span>${srcTag(r.src)}</div>${jgLine(r)}${isPending("bought." + r.k) ? `<div class="q pending">${ic("clock", 12)}Waiting to sync</div>` : S.bought[r.k] && S.bought[r.k].by ? `<div class="q">Ticked by ${esc(S.bought[r.k].by === myName() ? "you" : S.bought[r.k].by)}</div>` : ""}${r.have ? `<div class="q">${qty(r.have, r.it.unit, r.k)} already in your ${S.kitchen[r.k] ? S.kitchen[r.k].where : "kitchen"}</div>` : ""}${r.buy - r.need > r.it.pack * 0.25 && r.it.unit !== "pc" ? `<div class="q">Recipes use ${qty(r.need, r.it.unit, r.k)}, the rest goes to your fridge</div>` : ""}</div><span class="p">${rm(r.cost)}</span></label>`;
+      return `<label class="item wa ${done ? "done" : ""}"><input type="checkbox" id="b-${r.k}" data-bought="${r.k}" ${done ? "checked" : ""}>${ingArt(r.k, all.indexOf(r))}<div><div class="n">${esc(r.it.name)}</div><div class="q"><b style="font-weight:600;color:var(--fg2)">${r.src === "Jaya Grocer" ? `${r.packs} × ${r.it.unit === "pc" && JG.items[r.k].size % 1 ? "pack" : qty(JG.items[r.k].size, r.it.unit, r.k)}` : qty(r.buy, r.it.unit, r.k)}</b><span>· ${unitPrice(r.k)}</span>${srcTag(r.src)}</div>${jgLine(r)}${econHint(r)}${isPending("bought." + r.k) ? `<div class="q pending">${ic("clock", 12)}Waiting to sync</div>` : S.bought[r.k] && S.bought[r.k].by ? `<div class="q">Ticked by ${esc(S.bought[r.k].by === myName() ? "you" : S.bought[r.k].by)}</div>` : ""}${r.have ? `<div class="q">${qty(r.have, r.it.unit, r.k)} already in your ${S.kitchen[r.k] ? S.kitchen[r.k].where : "kitchen"}</div>` : ""}${r.buy - r.need > r.it.pack * 0.25 && r.it.unit !== "pc" ? `<div class="q">Recipes use ${qty(r.need, r.it.unit, r.k)}, the rest goes to your fridge</div>` : ""}</div><span class="p">${rm(r.cost)}</span></label>`;
     };
     const sec = order.filter(a => groups[a]).map(a => {
       const g = groups[a].sort((x, y) => (!!S.bought[x.k] - !!S.bought[y.k]) || y.cost - x.cost);

@@ -190,7 +190,8 @@ def main():
                    "states": state_names,
                    "stateMedian": [pack(index["states"][s]["median"]) for s in state_names],
                    "shops": shops, "chains": chains,
-                   "jg": json.load(open(os.path.join(P, "jayagrocer.json"))) if os.path.exists(os.path.join(P, "jayagrocer.json")) else None},
+                   "jg": json.load(open(os.path.join(P, "jayagrocer.json"))) if os.path.exists(os.path.join(P, "jayagrocer.json")) else None,
+                   "econ": json.load(open(os.path.join(P, "econsave.json"))) if os.path.exists(os.path.join(P, "econsave.json")) else None},
     }
     # Server copy of the ingredient catalogue for the recipe converter (api/convert.js); src/ isn't deployed.
     cat = {k: [v["name"], v["unit"]] for k, v in ingredients.items()}
