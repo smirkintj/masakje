@@ -472,6 +472,14 @@ h1 { font-size: 30px; line-height: 1.15; font-weight: 500; margin: 12px 0 4px; t
 .iart svg { width: 34px; }
 .item.wa { grid-template-columns: 28px 40px minmax(0, 1fr) auto; }
 .q.econ { color: var(--accent); }
+.findcard { border: 1px solid var(--line); border-radius: 20px; padding: 14px 16px; margin-top: 12px; background: var(--card); display: grid; gap: 12px; }
+.fc-h { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 12px; align-items: center; }
+.fc-h b { display: block; font-weight: 500; font-size: 16px; }
+.fc-h span:not(.art) { display: block; font-size: 14px; color: var(--fg2); }
+.fc-art { width: 48px; height: 48px; border-radius: 14px; background: var(--accent-soft); display: grid; place-items: center; }
+.fc-art .art { width: 42px; }
+.findcard .rx-bar { margin: 0; }
+.findcard .search-wrap { margin: 0; }
 .item.kit { gap: 10px; padding-left: 12px; padding-right: 8px; }
 .item.kit .iart { width: 32px; height: 32px; border-radius: 10px; }
 .item.kit .iart svg { width: 27px; }
@@ -986,7 +994,7 @@ const DATA = {"ingredients":{"chicken":{"name":"Chicken (whole, cleaned)","unit"
           <li><b>Cook at dinner time</b><span>Tap Start cooking. Missing something? We'll tell you first</span></li>
         </ol></div>`}
       <div class="week-grid">
-        <aside class="side">${hero}${budgetWarning(t)}${shopCard}
+        <aside class="side">${hero}${findCard()}${budgetWarning(t)}${shopCard}
         </aside>
         <section class="week-main"><div class="section-h"><h2>Rest of the week</h2><button class="btn" id="regen">${ic("swap")}New plan</button></div>${past.length ? `<p class="sub" style="margin:-4px 0 12px;font-size:14px">Earlier this week: ${past.join(" · ")}</p>` : ""}<div class="days">${days || `<p class="sub">That's the week. Plan next week from Settings</p>`}</div></section>
       </div>
@@ -1893,10 +1901,21 @@ const DATA = {"ingredients":{"chicken":{"name":"Chicken (whole, cleaned)","unit"
     return RECIPES.map(r => { const hay = " " + normQ(r.name + " " + r.en) + " "; const hit = w.filter(x => hay.includes(" " + x) || hay.includes(x + " ")).length; return { r, sc: hit / w.length }; })
       .filter(x => x.sc >= 0.5).sort((a, b) => b.sc - a.sc || a.r.name.length - b.r.name.length).slice(0, 2).map(x => x.r);
   }
-  async function openFind() {
+  // Today's "anything specific?" card: straight into the finder (our recipes only in the offline prototype)
+  function findCard() {
+    return `<div class="findcard"><div class="fc-h"><span class="fc-art">${methodArt("serve")}</span><div><b>Anything specific you want to cook?</b><span>Tell us the dish and we'll help you find it</span></div></div>
+      <div class="rx-bar"><div class="search-wrap">${ic("search")}<input class="search" id="today-q" type="search" enterkeyhint="search" maxlength="100" autocomplete="off" placeholder="e.g. ayam masak kicap" aria-label="Dish you want to cook"></div><button class="btn primary" data-todayfind="1">Find</button></div></div>`;
+  }
+  function findFromToday() {
+    const q = ((document.getElementById("today-q") || {}).value || "").trim();
+    if (!CLOUD || !q) { S.q = q; RXS.tab = "all"; return CLOUD && !q ? openFind() : go("recipes"); }
+    return openFind(q);
+  }
+  async function openFind(q0) {
     if (!CLOUD) return openEditor();
-    ED = null; FD = { step: "input", q: "", url: "", results: [], ours: [], err: "", left: null, used: [], daily: 3, ready: true };
+    ED = null; FD = { step: "input", q: q0 || "", url: "", results: [], ours: [], err: "", left: null, used: [], daily: 3, ready: true };
     S.tab = "recipes"; closeSheet(); render(); window.scrollTo({ top: 0 });
+    if (q0) runFind();
     try { const r = await api("find"); Object.assign(FD, { left: r.left, used: r.used || [], daily: r.daily, ready: r.ready }); if (FD.step === "input") { if (r.left === 0) FD.step = "limit"; render(); } } catch (e) { handleErr(e); }
   }
   async function runFind() {
@@ -2143,7 +2162,7 @@ const DATA = {"ingredients":{"chicken":{"name":"Chicken (whole, cleaned)","unit"
     requestAnimationFrame(() => { const n = q && document.querySelector(q); if (n) G.fromTo(n, { scale: 0.92 }, { scale: 1, duration: 0.32, ease: "back.out(2.6)", clearProps: "transform" }); });
   }, true);
   document.addEventListener("click", e => {
-    const el = e.target.closest("[data-tab],[data-go],[data-swap],[data-off],[data-recipe],[data-filter],[data-ed],[data-fd],[data-fdpick],[data-fdtry],[data-thaw],[data-thawcal],#waShare,[data-rxtab],[data-rxon],[data-rxoff],[data-rxreset],#rxsort,[data-people],[data-night],[data-avoid],[data-allergy],[data-dislike],[data-pick],[data-sound],[data-clear],[data-pneed],[data-applysave],[data-rate],[data-tonight],[data-pickday],[data-cookday],[data-cookone],#regen,#replan,#where,#lock,#shopped,#newweek,#obNext,#obBack,#guideOk,#logo,#savehood,[data-hide],[data-amode],#doCreate,#doJoin,#doJoinNew,[data-joinas],#copyPin,#afterCreated,#leave,#leaveYes,#moreshops,#addshop,#saveshop,#replanK,[data-kadd],[data-kdel],[data-kmove],[data-ksoon]");
+    const el = e.target.closest("[data-tab],[data-go],[data-swap],[data-off],[data-recipe],[data-filter],[data-ed],[data-todayfind],[data-fd],[data-fdpick],[data-fdtry],[data-thaw],[data-thawcal],#waShare,[data-rxtab],[data-rxon],[data-rxoff],[data-rxreset],#rxsort,[data-people],[data-night],[data-avoid],[data-allergy],[data-dislike],[data-pick],[data-sound],[data-clear],[data-pneed],[data-applysave],[data-rate],[data-tonight],[data-pickday],[data-cookday],[data-cookone],#regen,#replan,#where,#lock,#shopped,#newweek,#obNext,#obBack,#guideOk,#logo,#savehood,[data-hide],[data-amode],#doCreate,#doJoin,#doJoinNew,[data-joinas],#copyPin,#afterCreated,#leave,#leaveYes,#moreshops,#addshop,#saveshop,#replanK,[data-kadd],[data-kdel],[data-kmove],[data-ksoon]");
     if (!el) return;
     const s = S.settings;
     if (el.dataset.tab) return go(el.dataset.tab);
@@ -2153,6 +2172,7 @@ const DATA = {"ingredients":{"chicken":{"name":"Chicken (whole, cleaned)","unit"
     if (el.dataset.off !== undefined) return toggleOff(+el.dataset.off);
     if (el.dataset.recipe) return openRecipe(el.dataset.recipe);
     if (el.dataset.ed) return edAction(el.dataset.ed);
+    if (el.dataset.todayfind) return findFromToday();
     if (el.dataset.fd) return fdAction(el.dataset.fd);
     if (el.dataset.fdpick !== undefined) { const r = FD.results[+el.dataset.fdpick]; return r && runConvert(r.url, r.site); }
     if (el.dataset.fdtry) { FD.q = el.dataset.fdtry; return runFind(); }
@@ -2236,6 +2256,7 @@ const DATA = {"ingredients":{"chicken":{"name":"Chicken (whole, cleaned)","unit"
     if (t.id === "budget") { s.budget = Math.max(20, +t.value || DEFAULTS.budget); save(); }
   });
   document.addEventListener("keydown", e => {
+    if (e.key === "Enter" && e.target.id === "today-q") { e.preventDefault(); return findFromToday(); }
     if (e.key !== "Enter" || !FD) return;
     if (e.target.id === "fd-q") { e.preventDefault(); FD.q = e.target.value; runFind(); }
     else if (e.target.id === "fd-url") { e.preventDefault(); FD.url = e.target.value; fdAction("url"); }
