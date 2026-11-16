@@ -136,7 +136,9 @@ def main():
         items, pdf_url, book_url, vfrom, vto, usage = src["items"], src.get("url", ""), src.get("page", ""), src.get("valid_from"), src.get("valid_to"), {}
     else:
         if not os.environ.get("DEEPSEEK_API_KEY"):
-            raise SystemExit("econsave: DEEPSEEK_API_KEY isn't set")
+            print("::warning::econsave: no DEEPSEEK_API_KEY. Add it under Settings > Secrets and variables > Actions > Repository secrets, named exactly DEEPSEEK_API_KEY")
+            return
+        print(f"econsave: key found ({len(os.environ['DEEPSEEK_API_KEY'])} characters)")
         pdf_url, book_url = find_pdf()
         pdf_dir = tempfile.mkdtemp(prefix="econsave-")   # downloaded file in its own empty folder
         pdf_path = os.path.join(pdf_dir, "catalogue.pdf")

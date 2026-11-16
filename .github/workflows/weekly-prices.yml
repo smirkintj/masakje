@@ -14,8 +14,6 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    env:
-      HAS_DEEPSEEK: ${{ secrets.DEEPSEEK_API_KEY != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -26,8 +24,8 @@ jobs:
       - name: Jaya Grocer online prices (personal use, polite, once a week)
         run: python3 scripts/fetch_jayagrocer.py
       - name: Econsave weekly catalogue, West Malaysia (read by DeepSeek vision)
-        # Skipped until the DEEPSEEK_API_KEY repository secret exists; a failure here never blocks the other prices
-        if: ${{ env.HAS_DEEPSEEK == 'true' }}
+        # Needs the DEEPSEEK_API_KEY repository secret (Settings > Secrets and variables > Actions); without it the
+        # script logs a warning and stops. A failure here never blocks the other prices.
         continue-on-error: true
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
