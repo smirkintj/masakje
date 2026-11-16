@@ -35,6 +35,8 @@ PAUSE = 2.0
 # Never price from non-halal products, whatever an ingredient rule matches (Jaya Grocer marks them "[NON-HALAL]")
 NON_HALAL = re.compile(r"non[- ]?halal|\bpork\b|\bbabi\b|\bbacon\b|\blard\b|\bham\b", re.I)
 OUT = os.path.join(ROOT, "public", "data", "prices", "jayagrocer.json")
+_IDX = os.path.join(ROOT, "public", "data", "prices", "index.json")
+NATIONAL = json.load(open(_IDX))["national"]["median"] if os.path.exists(_IDX) else {}
 MAP = os.path.join(ROOT, "src", "data", "jayagrocer_map.json")
 INGREDIENTS = os.path.join(ROOT, "src", "data", "ingredients.json")
 
@@ -128,6 +130,14 @@ def main():
                 cands.append({"title": p["title"] + ("" if v["title"] in ("Default Title", "1 UNIT") else f' ({v["title"]})'),
                               "url": f'{BASE}/products/{p["handle"]}', "price": v["price"], "size": size,
                               "per": round(per_unit * it["size"], 2)})
+        # Against the KPDN PriceCatcher national median (or our typical price): a match outside 0.3x to 4x is
+        # almost always the wrong product (spinach pasta for bayam, ginger tea for ginger), so drop it.
+        ref = NATIONAL.get(key) or it.get("fallback")
+        if ref:
+            off = [c for c in cands if not (0.3 * ref <= c["per"] <= 4 * ref)]
+            for c in off[:2]:
+                report.append(f"  dropped for {key}: {c['title']} RM{c['per']} vs typical RM{ref}")
+            cands = [c for c in cands if 0.3 * ref <= c["per"] <= 4 * ref]
         if not cands:
             report.append(f"  no match: {key}")
             continue

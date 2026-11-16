@@ -32,7 +32,7 @@
   },
   "fish_selar": {
    "match": "selar|cencaru|ikan sardin",
-   "exclude": "canned|sauce|tin"
+   "exclude": "canned|sauce|tin|sardin"
   },
   "fish_tenggiri": {
    "match": "tenggiri",
@@ -89,7 +89,7 @@
   },
   "bayam": {
    "match": "bayam|spinach",
-   "exclude": "baby|hong kong|water|kangkung"
+   "exclude": "baby|hong kong|water|kangkung|pasta|fettuccine|noodle|spaghetti|ravioli|wrap|chip"
   },
   "sawi": {
    "match": "\\bsawi\\b(?! jepun)|choy sam",
@@ -186,7 +186,7 @@
   },
   "ginger": {
    "match": "ginger|halia",
-   "exclude": "flower|bunga|powder|paste|tea|drink|young|pickled|candied|garlic"
+   "exclude": "flower|bunga|powder|paste|tea|drink|young|pickled|candied|garlic|tea|honey|camomile|biscuit|cookie|drink|candy|sauce|paste|powder"
   },
   "galangal": {
    "match": "galangal|lengkuas",
